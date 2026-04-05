@@ -1,0 +1,16 @@
+services:
+  database:
+    image: postgres:18-alpine
+    container_name: autoparts_db
+    restart: always
+    environment:
+      POSTGRES_USER: devel
+      POSTGRES_PASSWORD: devel
+      POSTGRES_DB: autoparts
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
