@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider     = "prisma-client"
   output       = "../generated/prisma"
@@ -11,4 +6,174 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+
+model Profile {
+  id    Int    @id @default(autoincrement())
+  name  String @unique // ex: Admin, Manager, Operator
+  users User[]
+
+  @@map("profiles")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  profileId Int
+  profile   Profile  @relation(fields: [profileId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+
+model Country {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  states State[]
+
+  @@map("countries")
+}
+
+model State {
+  id        Int     @id @default(autoincrement())
+  name      String
+  countryId Int
+  country   Country @relation(fields: [countryId], references: [id])
+  cities    City[]
+
+  @@map("states")
+}
+
+model City {
+  id        Int        @id @default(autoincrement())
+  name      String
+  stateId   Int
+  state     State      @relation(fields: [stateId], references: [id])
+  suppliers Supplier[]
+
+  @@map("cities")
+}
+
+
+model Supplier {
+  id       Int       @id @default(autoincrement())
+  name     String
+  cnpj     String    @unique @db.VarChar(18)
+  cityId   Int
+  city     City      @relation(fields: [cityId], references: [id])
+  products Product[]
+
+  @@map("suppliers")
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[]
+
+  @@map("categories")
+}
+
+model Brand {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  acronym  String?   @unique @db.VarChar(10) // Ex: GM, VW, FIAT
+  products Product[]
+
+  @@map("brands")
+}
+
+model UnitOfMeasurement {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique // ex: UN, KG, LT
+  products Product[]
+
+  @@map("units_of_measurement")
+}
+
+model StorageLocation {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[]
+
+  @@map("storage_locations")
+}
+
+
+model Product {
+  id           String  @id @default(uuid())
+  name         String
+  sku          String  @unique
+  description  String?
+  price        Decimal @db.Decimal(10, 2)
+  currentStock Int     @default(0)
+
+  categoryId          Int
+  category            Category          @relation(fields: [categoryId], references: [id])
+  brandId             Int
+  brand               Brand             @relation(fields: [brandId], references: [id])
+  supplierId          Int
+  supplier            Supplier          @relation(fields: [supplierId], references: [id])
+  unitOfMeasurementId Int
+  unitOfMeasurement   UnitOfMeasurement @relation(fields: [unitOfMeasurementId], references: [id])
+  storageLocationId   Int
+  storageLocation     StorageLocation   @relation(fields: [storageLocationId], references: [id])
+
+  entries     StockEntry[]
+  exits       StockExit[]
+  losses      StockLoss[]
+  inventories InventoryHistory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("products")
+}
+
+
+model StockEntry {
+  id        Int      @id @default(autoincrement())
+  quantity  Int
+  date      DateTime @default(now())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@map("stock_entries")
+}
+
+model StockExit {
+  id        Int      @id @default(autoincrement())
+  quantity  Int
+  date      DateTime @default(now())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@map("stock_exits")
+}
+
+model StockLoss {
+  id        Int      @id @default(autoincrement())
+  quantity  Int
+  reason    String?
+  date      DateTime @default(now())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@map("stock_losses")
+}
+
+model InventoryHistory {
+  id            Int      @id @default(autoincrement())
+  countedStock  Int
+  previousStock Int
+  date          DateTime @default(now())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id])
+
+  @@map("inventory_history")
 }
